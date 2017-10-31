@@ -1,25 +1,29 @@
 % Jonathan Morton and Jun Son
-imageFiles = dir('yalefaces');
+rootFolder = 'att_faces';
+imageFolders = dir(rootFolder);
+imageFolders = {imageFolders.name};
+imageFolders = imageFolders(startsWith(imageFolders(:), 's'));
+
 images = [];
-subjectIds = [];
-for i = 1:size(imageFiles, 1) 
-    fileName = imageFiles(i).name;
-    startSplit = 'subject';
-    endSplit = '.';
+subjectIds = {};
+for i = 1:size(imageFolders, 2) 
+    folder = imageFolders{i};
+    subjectPath = strcat(rootFolder, '/',folder);
+    images = dir(subjectPath);
+    images = {images.name};
+    images = images(or(endsWith(images(:), 'pgm'), endsWith(images(:), 'png')));
     
-    if ~contains(fileName, startSplit, 'IgnoreCase', true)
-        continue
-    end
+    subjectId = folder;
+    subjectIds = unique([subjectIds subjectId]);
+    faces(i).id = subjectId;
+    faces(i).pictures = {};
     
-    subjectId = extractBetween(fileName, startSplit, endSplit);
-    subjectId = str2double(subjectId{1});
-    
-    if ismember(subjectId, subjectIds)
-         faces(subjectId).pictures{end+1} = fileName;
-    else
-        subjectIds = unique([subjectIds subjectId]);
-        faces(subjectId).id = subjectId;
-        faces(subjectId).pictures = {fileName};
+    for j = 1:size(images, 2)
+        fullImagePath = strcat(subjectPath, '/', images{j});
+        image = imread(fullImagePath);
+        faces(i).pictures = [faces(i).pictures, image];
     end
 end
-    
+
+
+
