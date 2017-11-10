@@ -22,7 +22,7 @@ mean_face = mean(images, 2);
 shifted_images = images - repmat(mean_face, 1, num_images);
  
 % steps 3 and 4: calculate the ordered eigenvectors and eigenvalues
-[evectors, score, evalues] = princomp(images');
+[evectors, score, evalues] = pca(images');
  
 % step 5: only retain the top 'num_eigenfaces' eigenvectors (i.e. the principal components)
 num_eigenfaces = 20;
