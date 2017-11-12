@@ -16,33 +16,33 @@ for n = 1:num_images
     images(:, n) = img(:);
 end
 
-
 % steps 1 and 2: find the mean image and the mean-shifted input images
-mean_face = mean(images, 2);
-shifted_images = images - repmat(mean_face, 1, num_images);
- 
+mean_face = mean(train_data, 2);
+shifted_images = train_data - repmat(mean_face, 1, num_train);
+
 % steps 3 and 4: calculate the ordered eigenvectors and eigenvalues
-[evectors, score, evalues] = princomp(images');
- 
+[evectors, score, evalues] = princomp(train_data');
+
 % step 5: only retain the top 'num_eigenfaces' eigenvectors (i.e. the principal components)
 num_eigenfaces = 20;
 evectors = evectors(:, 1:num_eigenfaces);
- 
+
 % step 6: project the images into the subspace to generate the feature vectors
 features = evectors' * shifted_images;
 
 
 
+
 % Classification to test face recognition
 % calculate the similarity of the input to each training image
-feature_vec = evectors' * (input_image(:) - mean_face);
-similarity_score = arrayfun(@(n) 1 / (1 + norm(features(:,n) - feature_vec)), 1:num_images);
- 
+feature_vec = evectors' * (test_data(:,82) - mean_face);
+similarity_score = arrayfun(@(num_train) 1 / (1 + norm(features(:,num_train) - feature_vec)), 1:num_train);
+
 % find the image with the highest similarity
 [match_score, match_ix] = max(similarity_score);
- 
+
 % display the result
-figure, imshow([input_image reshape(images(:,match_ix), image_dims)]);
+figure, imshow(test_data(:,82));
 title(sprintf('matches %s, score %f', filenames(match_ix).name, match_score));
 
 
