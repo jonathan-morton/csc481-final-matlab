@@ -6,7 +6,9 @@ clc
 
 % get directories for all images
 % please use 'getfn.m' with this script
-fn = getfn('C:\Users\json13\Desktop\att_faces', 'pgm$')
+%'C:\Users\json13\Desktop\att_faces'
+% 'E:\att_faces'
+fn = getfn('E:\ORL_images', 'pgm$')
 
 % read and convert images to column vector
 image_dims = [112, 92];
@@ -44,7 +46,9 @@ P = Class_population * Class_number; % Total number of training images
 mean_face = mean(train_data, 2);
 
 %%%%%%%%%%%%%%%%%%%%%%%% Calculating the deviation of each image from mean image
+% shifted_images = bsxfun(@minus, train_data, mean_face);
 shifted_images = train_data - repmat(mean_face, 1, P);
+
 
 % display mean_face for train_data
 % example input image = s1-3.pgm
@@ -62,10 +66,41 @@ subplot(1,3,3),imagesc(shifted), colormap(gray), title('Mean-shifted face');
 
 %%%%%%%%%%%%%%%%%%%%%%%% Snapshot method of Eigenface algorithm
 A = shifted_images;
-L = A'*A; % L is the surrogate of covariance matrix C=A*A'.
+L = A'*A; % L is the surrogate of covariance matrix C=A*A'. Original: L = cov(A');
 [V D] = eig(L); % Diagonal elements of D are the eigenvalues for both L=A'*A and C=A*A'.
 
-%%%%%%%%%%%%%%%%%%%%%%%% Sorting and eliminating small eigenvalues
+%%%%%%%%%%%%%%%%%%%%%%%% sort eigenvalues in descending order
+eigval = diag(D);
+eigval = eigval(end:-1:1);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%% you may skip this part 
+%%%%%%%%%%%%%%%%%%%%%%%% evaluate the number of principal components needed to represent 95% Total variance.
+eigsum = sum(eigval);
+csum = 0;
+for i = 1:10304
+    csum = csum + eigval(i);
+    tv = csum/eigsum;
+    if tv > 0.95
+        k95 = i;
+        break
+    end ;
+end;
+fprintf('The number of principal components to represent 95 percent total variance: %g\n', i); 
+
+% ====== Plot variance percentage vs. no. of eigenvalues
+cumVar=cumsum(eigval);
+cumVarPercent=cumVar/cumVar(end)*100;
+plot(cumVarPercent, '.-');
+xlabel('No. of eigenvalues');
+ylabel('Cumulated variance percentage (%)');
+title('Variance percentage vs. no. of eigenvalues');
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%% 
 L_eig_vec = [];
 for i = P:-1:Class_number+1
     L_eig_vec = [L_eig_vec V(:,i)];
@@ -78,6 +113,16 @@ V_PCA = A * L_eig_vec; % A: centered image vectors
 ProjectedImages_PCA = V_PCA'*A;
 
 
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%
+%%%%        LDA
+%%%% 
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%% Calculating the mean of each class in eigenspace
 m_PCA = mean(ProjectedImages_PCA,2); % Total mean in eigenspace
 m = zeros(P-Class_number,P-Class_number); 
@@ -99,7 +144,8 @@ Sb = Class_population*Sb;
 %%%%%%%%%%%%%%%%%%%%%%%% Calculating Fisher discriminant basis's
 % We want to maximise the Between Scatter Matrix, while minimising the
 % Within Scatter Matrix. Thus, a cost function J is defined, so that this condition is satisfied.
-[J_eig_vec, J_eig_val] = eig(Sb,Sw); % Cost function J = inv(Sw) * Sb
+J = inv(Sw) * Sb;
+[J_eig_vec, J_eig_val] = eig(J); 
 V_Fisher = fliplr(J_eig_vec);
 
 
@@ -109,12 +155,12 @@ V_Fisher = fliplr(J_eig_vec);
 ProjectedImages_Fisher = V_Fisher' * ProjectedImages_PCA;
 
 
-
+a = V_Fisher' * V_PCA';
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%% Extracting the FLD features from test image
-InputImage = imread('s40.pgm');
+InputImage = imread('s10.pgm');
 temp = InputImage(:,:,1);
 
 [irow icol] = size(temp);
@@ -173,9 +219,10 @@ for i=1:reducedDim
 	set(gca, 'xticklabel', ''); set(gca, 'yticklabel', '');
 end
 
+
 %%%%%%%%%%%%%%%%%%%%%%%% difference between the original and projected
 %%%%%%%%%%%%%%%%%%%%%%%% image (pca)
-origFace=train_data(:,100);
+origFace=train_data(:,1);
 projFace=V_PCA*(V_PCA'*(origFace-mean_face))+mean_face;
 
 I = imrotate(reshape(origFace, icol, irow),270);
@@ -191,35 +238,6 @@ fprintf('Difference between orig. and projected images = %g\n', norm(origFace-pr
 
 
 
-
-
-
-
-
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-% reference: http://mirlab.org/jang/books/dcpr/fePca4fr.asp?title=11-4%20PCA%20for%20Face%20Recognition
-% ====== Perform PCA
-% A2 = the principal component coefficients
-[A2, eigVec, eigValue]=pca(train_data);
-
-% ====== Plot variance percentage vs. no. of eigenvalues
-cumVar=cumsum(eigValue);
-cumVarPercent=cumVar/cumVar(end)*100;
-plot(cumVarPercent, '.-');
-xlabel('No. of eigenvalues');
-ylabel('Cumulated variance percentage (%)');
-title('Variance percentage vs. no. of eigenvalues');
 
 
 
