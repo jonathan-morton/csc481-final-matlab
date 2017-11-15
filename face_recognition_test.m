@@ -2,7 +2,7 @@
 % Run this code to test your image
 
 %%%%%%%%%%%%%%%%%%%%%%%% Extracting the FLD features from test image
-InputImage = faces(1).pictures{1};
+InputImage = faces(4).pictures{1};
 temp = InputImage(:,:,1);
 
 [irow icol] = size(temp);
