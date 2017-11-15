@@ -18,15 +18,18 @@ for i = 1:Class_number
     
     [Euc_dist_min , Recognized_index] = min(Euc_dist);
     
-    if mod(Recognized_index,9) == 0
-        class = Recognized_index/9;
-    else
-        class = round(Recognized_index/9)+1;
-    end
-    
-    if class == i
+    if train_data_id(Recognized_index) == i
+%         fprintf('Matched!\n');
         recognition_count = recognition_count+ 1;
+    else
+        fprintf('NO MATCH! TestId: %i TrainingId: %i\n',i, train_data_id(Recognized_index));
     end
+
+%     classId = findSubjectId(Recognized_index,train_data,faces);
+%     classNumberId = getIdFromIndex(Class_number, faces);
+%     if strcmp(classId, classNumberId)
+%         recognition_count = recognition_count + 1;
+%     end
     
 end
 
