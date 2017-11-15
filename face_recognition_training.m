@@ -23,10 +23,11 @@ for n = 1:num_images
 end
 images = double(images);
 
-% split into training and testing data with 2:8 split ratio
+% split into training and testing data with 1:9 split ratio
 % our faces are in test_data(:,n) where n = [71,74]
 train_data = [];
 test_data = [];
+
 cont = 1;
 for i=1:42
     for j=1:10
